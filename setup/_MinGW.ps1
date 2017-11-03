@@ -1,4 +1,14 @@
-#加载winapi  
+#加载winapi 
+trap [exception]
+{
+ '在trap中捕获到脚本异常'
+ $_.Exception.Message
+ continue
+} 
+try
+{
+
+
 $ini = Add-Type -memberDefinition @"  
 [DllImport("Kernel32")]  
 public static extern int GetPrivateProfileString (  
@@ -35,4 +45,11 @@ $shell = New-Object -ComObject Shell.Application
 $sourceFolder = $shell.NameSpace($Source)
 $destinationFolder = $shell.NameSpace($Destination)
 $DestinationFolder.CopyHere($sourceFolder.Items())
+
+}
+catch
+{
+   echo $_.Exception.Message
+   exit 1
  
+}
