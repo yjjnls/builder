@@ -1,6 +1,6 @@
 
 
-
+_CERBERO_BUILDER_COMMAN_UTILS_LOAD="YES"
 #http://www.jb51.net/article/53259.htm
 function __getconfig(){
 
