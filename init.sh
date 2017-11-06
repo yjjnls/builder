@@ -1,13 +1,14 @@
-if [ "x$MSYSTEM" == "xmsys" ]; then
+#if [ "x$MSYSTEM" == "xmsys" ]; then
 __dir__=$(cd $(/usr/bin/dirname ${BASH_SOURCE[0]}); pwd )
-
+echo "@@@$__dir__"
 source /usr/etc/profile
 HOME=$USERPROFILE
 cd $__dir__
 
-else
+#else
 
-echo Linux System
 
-fi
+#echo Linux System
+
+#fi
 
