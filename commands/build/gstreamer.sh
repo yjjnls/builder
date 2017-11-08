@@ -178,7 +178,7 @@ function _bootstrap(){
 }
 
 function _install_build_tools(){
-   tarball=gstreamer-build_tools-${_PLATFORM}-${_ARCH}-${_VERSION}.tar.bz2
+   tarball=build_tools-${_PLATFORM}-${_ARCH}-${_VERSION}.tar.bz2
    repo=${_RELEASE_DIR}/${_BUILD_TOOLS_RELEASE_NAME}
    if [ ! -f $repo/$tarball ]; then
       repo=$(cerbero --get-config release repo)
@@ -205,6 +205,7 @@ function _build_base(){
 }
 function _install_base(){
    repo=${_RELEASE_DIR}/${_BUILD_TOOLS_RELEASE_NAME}
+   echo $repo ,'$$$$$$$$$$$$$'
    if [ ! -f $repo/Build.yaml ]; then
       repo=$(cerbero --get-config release repo)
 	  if [ "x$repo" == "x" ]; then
