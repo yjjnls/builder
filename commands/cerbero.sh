@@ -79,15 +79,15 @@ function load_cerbero_pkg_src(){
 
 
 	if [ ! -d sources ]; then
-		if [ ! -f ~tmp/tarball ] ; then
-		    repo=$(get_conf cerbero 'gstreamer-bundle-source-repo')
-			[ !-z $repo ] && repo=https://gstreamer.freedesktop.org/data/pkg/src
+		if [ ! -f ~tmp/${tarball} ] ; then
+		    repo=$(get_conf cerbero gstreamer-bundle-source-repo)
+			[ -z $repo ] && repo=https://gstreamer.freedesktop.org/data/pkg/src
 			url=${repo}/${version}/${tarball}
 			wget --no-check-certificate $url -O ~tmp/${tarball} 
 		fi
 		
 		echo "extracting ${tarball}"
-		tar xf ~tmp/${tarball} -C ~tmp/
+		tar vxf ~tmp/${tarball} -C ~tmp/
 		mv  -f ~tmp/cerbero-${version}/sources ${__cerbero_home__}/sources
 	fi
 
