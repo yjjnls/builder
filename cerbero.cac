@@ -35,4 +35,4 @@ def mirror(url):
             part = dest + url[len(src):]
     return part
         
-
+MINGWGET_DEPS=[]
