@@ -198,23 +198,26 @@ function _build_base(){
    cerbero ${_CONFIG} bootstrap --build-tools-disable &&
    _install_build_tools &&
    cerbero ${_CONFIG} package base --tarball &&
-   cerbero ${_CONFIG} cpm-pack base --type sdk --output-dir ${_BASE_RELEASE_NAME}
+   rdir=${_RELEASE_DIR}/${_BASE_RELEASE_NAME}
+   [ ! -d $rdir ] && rm -rf $rdir
+   mkdir $rdir
+   cerbero ${_CONFIG} cpm-pack base --type sdk --output-dir $rdir
 
    exitif $? "build gstreamer base sdk failed."
 
 }
 function _install_base(){
-   repo=${_RELEASE_DIR}/${_BUILD_TOOLS_RELEASE_NAME}
-   echo $repo ,'$$$$$$$$$$$$$'
+   repo=${_RELEASE_DIR}/${_BASE_RELEASE_NAME}
+
    if [ ! -f $repo/Build.yaml ]; then
       repo=$(cerbero --get-config release repo)
 	  if [ "x$repo" == "x" ]; then
 	     exitif 1 "can not find release repo"
 	  fi
-	  repo=${repo}/${_BUILD_TOOLS_RELEASE_NAME}
+	  repo=${repo}/${_BASE_RELEASE_NAME}
    fi
    
-   cerbero ${_CONFIG} cpm-install --type sdk --repo $repo --build-tools
+   cerbero ${_CONFIG} cpm-install base --type build --repo $repo
    exitif $? "install gstreamer base failed."
    
 }
@@ -223,12 +226,16 @@ function _install_base(){
 
 function _build_gstreamer(){
    
-   [ -d $_PREFIX ] && mv $_PREFIX ${_PREFIX}@$(date +%Y%m%d%H%M%S)
-   cerbero ${_CONFIG} bootstrap --build-tools-disable &&
-   _install_build_tools &&
-   _install_base &&
-   cerbero ${_CONFIG} package gstreamer-1.0 --tarball &&
-   cerbero ${_CONFIG} cpm-pack gstreamer-1.0 --type sdk --output-dir ${_GSTREAMER_RELEASE_NAME}
+   #[ -d $_PREFIX ] && mv $_PREFIX ${_PREFIX}@$(date +%Y%m%d%H%M%S)
+   rdir=${_RELEASE_DIR}/${_GSTREAMER_RELEASE_NAME}
+   [ ! -d $rdir ] && rm -rf $rdir
+   mkdir $rdir
+
+   #cerbero ${_CONFIG} bootstrap --build-tools-disable &&
+   #_install_build_tools &&
+   #_install_base &&   
+   #cerbero ${_CONFIG} package gstreamer-1.0 --tarball &&
+   cerbero ${_CONFIG} cpm-pack gstreamer-1.0 --type sdk --output-dir $rdir
 
    exitif $? "build gstreamer base sdk failed."
 
