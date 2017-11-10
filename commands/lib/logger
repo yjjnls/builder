@@ -1,0 +1,49 @@
+#
+#
+#
+#
+__file__=$(echo ${BASH_SOURCE[0]} )
+__dir__=$(cd $(dirname ${BASH_SOURCE[0]}); pwd )
+
+     #============================================#
+     #       module command implement             #
+     #============================================#
+	 
+function info(){
+   echo $@
+}
+
+function warn(){
+   echo $@
+}
+
+function error(){
+   echo $@
+}
+
+
+EXPORTS=(
+   info
+   warn
+   error
+)
+
+     #============================================#
+     #       export                               #
+     #============================================#
+
+name=$1
+if [ -z $name ]; then
+   echo "${__file__}  "
+   exit 0
+fi
+shift
+
+for fn in ${EXPORTS[@]}
+do
+   if [[ "$name" == "${fn}" || "$name" == ".${fn}"  ]];then
+       ${fn} $@
+	   exit $?
+   fi
+done
+exit 128

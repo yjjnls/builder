@@ -1,0 +1,70 @@
+#
+#
+#
+#
+__file__=$(echo ${BASH_SOURCE[0]} )
+__dir__=$(cd $(dirname ${BASH_SOURCE[0]}); pwd )
+
+     #============================================#
+     #       module command implement             #
+     #============================================#
+
+__config__=
+function get(){
+   filename=$1
+   section=$2
+   key=$3
+
+   #这里面的的SECTION的变量需要先用双引号，再用单引号，我想可以这样理解，
+   #单引号标示是awk里面的常量，因为$为正则表达式的特殊字符，双引号，标示取变量的值
+   #{gsub(/[[:blank:]]*/,"",$2)去除值两边的空格内容
+   awk -F '=' '/\['"$section"'\]/{a=1}a==1&&$1~/'"$key"'/{gsub(/[[:blank:]]*/,"",$2);printf("%s",$2) ;exit}' $filename   
+}
+
+
+EXPORTS=(
+   get
+)
+
+     #============================================#
+     #       export                               #
+     #============================================#
+
+opt=$1;shift
+
+#load module
+if [ -z $opt ]; then
+   echo "${__file__}  "
+   exit 0
+fi
+
+
+if [ "$opt" == ".open" ];then
+   __config__=$1
+   if [ ! -f ${__config__} ]; then
+      echo "$filename not exist "
+	  exit 1
+   fi
+   
+   echo "${__file__}  @${__config__} "
+   exit 0
+fi
+
+
+__config__=
+if [ "${opt:0:1}" == "@" ]; then
+
+    __config__=${opt:1}	
+	opt=$1;shift
+fi
+
+
+for fn in ${EXPORTS[@]}
+do
+   if [[ "$opt" == "${fn}" || "$opt" == ".${fn}"  ]];then
+       ${fn} ${__config__} $@ 
+	   exit $?
+   fi
+done
+exit 128
+

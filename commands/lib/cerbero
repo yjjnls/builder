@@ -1,0 +1,305 @@
+#
+#
+#
+#
+
+__file__=$(echo ${BASH_SOURCE[0]} )
+__dir__=$(cd $(dirname ${BASH_SOURCE[0]}); pwd )
+__builder__=$(cd $__dir__/../..; pwd)
+
+     #============================================#
+     #       module command implement             #
+     #============================================#
+
+__config__=
+__custom__=	 
+__cbc__=
+__arch__=x86_64
+__platform__=windows
+__debug__=
+__home__=
+
+__option_cbc__=
+
+[ "x$(uname)" == "xLinux" ] && __platform__==linux
+
+function _cbc(){
+    if [ -z $__cbc__ ];then
+	   __cbc__=$__option_cbc__
+		if [ ! -z $__custom__ ]; then
+			__cbc__=$(__builder__)/custom/$__custom__/$__cbc__
+		fi
+	fi
+}
+
+function _home(){
+    local inifile=$($__dir__/inifile)
+	local config=$($inifile.open $__config__)
+
+    local section='cerbero'
+    if [ ! -z $__custom__ ]; then
+	   section="cerbero.${__custom__}"	   
+	fi
+	d=	
+	if [ "x$(uname)" == "xLinux" ];then
+		d=$($config.get $section home.linux)
+	else
+	    d=$($config.get $section home.windows)
+	fi
+	
+	if [ ! -z $__custom__ ]; then
+	    cd $(dirname $__config__)
+		[ ! -z $d ] && cd $d
+	    d= $PWD
+	fi
+	echo $d
+
+}
+
+function _init_(){
+   __home__=$(_home)
+   _cbc
+   __debug__=$(config build_type)
+   [ "x$__debug__" != "xdebug" ] && __debug__=   
+}
+
+
+function config(){
+   local name=$1
+   cd $__home__ &&
+   ./cerbero-uninstalled -c $__cbc__ cpm-query --configvar $name 2>&1 | awk -v var="config.${name}" -F ['='] '{  if( $1==var) print $2}'
+}
+
+
+
+function load(){
+    local inifile=$($__dir__/inifile)
+	local config=$($inifile $__config__)
+	local homed=$(home)
+
+	if [ ! -d $homed ]; then
+	   git clone $( $config.get cerbero repo) $@ $homed
+	fi
+	
+	
+	if [ ! -d $homed ] ; then
+	   EXCEPTION='can not load cerbero repos $(get_conf cerbero repo) to ${__cerbero_home__}'
+	   return 1
+	fi
+	
+	val=$($config.get git user.name)
+	[ ! -z $val ] &&  git config user.name $val
+	
+	val=$($config.get git user.email)
+	[ ! -z $val ] &&  git config user.email $val
+	
+	return 0
+}
+
+function pkg_version(){
+	name=$1
+	cd ${__home__}&&
+	./cerbero-uninstalled packageinfo $name 2>&1 | awk '{if( $1== "Version:") print $2; }'
+}
+
+function load_cerbero_pkg_src(){
+    local inifile=$($__dir__/inifile)
+	local config=$($inifile $__config__)
+	local homed=$(home)
+	
+    version=$1
+	ext=$2
+	cd $homed
+	
+	[ -z $version ] && version=$( gstreamer_version )
+	[ -z $ext ] && ext=tar.gz
+
+	[ ! -d ~tmp ] && mkdir ~tmp 
+	
+	tarball=cerbero-${version}.${ext}
+
+
+	if [ ! -d sources ]; then
+		if [ ! -f ~tmp/${tarball} ] ; then
+		    repo=$($config.get cerbero gstreamer-bundle-source-repo)
+			[ -z $repo ] && repo=https://gstreamer.freedesktop.org/data/pkg/src
+			url=${repo}/${version}/${tarball}
+			wget --no-check-certificate $url -O ~tmp/${tarball} 
+		fi
+		
+		echo "extracting ${tarball}"
+		tar xf ~tmp/${tarball} -C ~tmp/
+		mv  -f ~tmp/cerbero-${version}/sources ${homed}/sources
+	fi
+
+
+	[[  ! -d ${homed}/sources ]] && return 1
+	return 0
+}
+
+function run(){
+	cd $__home__ &&
+	./cerbero-uninstalled -c "$__cbc__" $@
+}
+
+
+function release_tag(){
+
+    local name=$1
+	local debug=$2
+	local pkgname=$name
+	local tagname=$name
+	local platform=
+	if [[ ($name == "build_tools") || ($name == "build-tools")  ]] ; then
+	    tagname="gstreamer-build_tools"
+		version=$(pkg_version 'gstreamer-1.0')
+	elif [[ $name == 'base' ]] ; then
+	    tagname="base"
+		version=$(pkg_version 'gstreamer-1.0')
+	elif [[ ($name == 'gstreamer') || ($name == 'gstreamer-1.0') ]] ; then
+	    tagname="gstreamer"
+		version=$(pkg_version 'gstreamer-1.0')
+
+	else
+	    version=$(pkg_version $name )	
+	fi
+	
+	if [ ! -z $__debug__ ]; then
+	   tagname="${tagname}_d"
+	fi
+	
+	rtag=${tagname}-${__platform__}-${__arch__}-${version}
+	echo $rtag
+}
+
+function build_tools_pkg_name(){
+    local version=$(pkg_version 'gstreamer-1.0')
+    echo build_tools-${__platform__}-${__arch__}-${version}.tar.bz2
+}
+
+function release_dir(){
+    local inifile=$($__dir__/inifile)
+	local rdir=$( $inifile.get $__config__ cerbero 'release.dir')
+	[ -z $rdir ] && rdir=$__builder__/releases
+	echo $rdir
+}
+
+function release_repo(){
+    local name=$1
+	local option=$2
+	local rtag=$(release_tag $name)
+	if [ "x$option" == "--no-release-dir" ]; then
+	   local inifile=$($__dir__/inifile)
+	   echo $($inifile.get $__config__  release repo )/$rtag
+	   return 0
+	fi
+	
+	local rdir=$(release_dir)/$rtag
+	if [ $name == build_tools ]; then
+	   if [ -f $rdir/$(build_tools_pkg_name) ]; then
+	       echo $rdir/$rtag
+		   return 0
+	   fi
+	elif [ -f $rdir/Build.yaml ]; then
+	   echo $rdir/$rtag
+	   return 0
+	fi
+	local inifile=$($__dir__/inifile)
+	echo $( $inifile.get $__config__  release repo )/$rtag	
+}
+
+function dump(){
+   echo "=========cerbero=============="
+   echo "__config__:$__config__"
+   echo "__custom__:$__custom__"
+   echo $@
+   echo "=============================="
+}
+
+EXPORTS=(
+   load
+   pkg_version
+   load_cerbero_pkg_src
+   run
+   config
+   release_tag
+   build_tools_pkg_name
+   release_dir
+   release_repo
+   
+   
+   dump
+   
+)
+
+     #============================================#
+     #       export                               #
+     #============================================#
+
+opt=$1;shift
+if [ -z $opt ]; then
+   echo "${__file__}  "
+   exit 0
+fi
+
+
+if [ "$opt" == ".open" ];then
+   _config=
+   _custom=
+   _debug=
+   _config=$1
+   if [ ! -f ${_config} ]; then
+      echo "$_config not exist "
+	  exit 1
+   fi
+   _config="@$1"
+   
+   if [ ! -z $2 ]; then
+       _custom="@$2"
+   fi
+
+   if [ ! -z $3 ]; then
+       _debug="@$3"
+   fi
+   
+   echo "${__file__}  ${_config} ${_custom} "
+   exit 0
+fi
+if [ "${opt:0:1}" == "@" ]; then
+
+    __config__=${opt:1}
+
+	cbc=$1
+	if [ "${cbc:0:1}" == "@" ]; then
+	    __option_cbc__=${cbc:1}
+		shift
+	fi
+	
+	custom=$1
+	if [ "${custom:0:1}" == "@" ]; then
+	    __custom__=${custom:1}
+		shift
+	fi
+fi
+
+opt=$1;shift
+for fn in ${EXPORTS[@]}
+do
+   if [[ "$opt" == "${fn}" || "$opt" == ".${fn}"  ]];then
+       _init_
+       ${fn} $@
+	   exit $?
+   fi
+done
+exit 128
+
+
+
+
+
+
+
+
+
+
+
