@@ -54,6 +54,7 @@ build_tools_prefix=$($cerbero.get_config build_tools_prefix)
 pkgname=$($cerbero.build_tools_pkg_name)
 repo=$($cerbero.release_repo build_tools)
 
+#$cerbero.run bootstrap --cpm-install  --build-tools-disable
 $cerbero.run cpm-install  $pkgname --repo $repo --build-tools
 check "install $pkgname at $repo"
 
