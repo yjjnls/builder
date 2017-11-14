@@ -1,0 +1,87 @@
+arch: x86_64
+component:
+  libevent:
+    dependencies: {}
+    devel:
+      SHA1: ebe6eba94758b97a2de6e4302a4e8a0b65e0374e
+      filename: libevent-windows-x86_64-2.1.8-devel.tar.bz2
+    runtime:
+      SHA1: cf5a54031ca123f5c4fb78df37bc31de94b39165
+      filename: libevent-windows-x86_64-2.1.8.tar.bz2
+    version: 2.1.8
+  libusrsctp:
+    dependencies: {}
+    devel:
+      SHA1: 8e6b2f1671bc41ac45951772c4388f2d77912379
+      filename: libusrsctp-windows-x86_64-1.0.1-devel.tar.bz2
+    runtime:
+      SHA1: aad5da153244c7758bde72ac6e374fc6bcc664b6
+      filename: libusrsctp-windows-x86_64-1.0.1.tar.bz2
+    version: 1.0.1
+  libuv:
+    dependencies: {}
+    devel:
+      SHA1: c35382987f40a921badb3082aac3b1b734dc3892
+      filename: libuv-windows-x86_64-1.12.0-devel.tar.bz2
+    runtime:
+      SHA1: 107ceee846662b0acdff66d4f2de4f8ee524d0e8
+      filename: libuv-windows-x86_64-1.12.0.tar.bz2
+    version: 1.12.0
+  libwebsockets:
+    dependencies:
+      libuv: 1.12.0
+      zlib: 1.2.11
+    devel:
+      SHA1: 3b98ac87eb5c8ddd86ed5ac0796d45c8bdf33b6e
+      filename: libwebsockets-windows-x86_64-2.2.1-devel.tar.bz2
+    runtime:
+      SHA1: 35697e9a3477bd0b48e6b8d28824bb57377e0188
+      filename: libwebsockets-windows-x86_64-2.2.1.tar.bz2
+    version: 2.2.1
+  log4cplus:
+    dependencies: {}
+    devel:
+      SHA1: 160bebd586b4c1d362625d7756b8a14632beb734
+      filename: log4cplus-windows-x86_64-1.2.1-rc1-devel.tar.bz2
+    runtime:
+      SHA1: 3a1268230dd1ae5dbbd3b1669fdbc16e1aa42ba5
+      filename: log4cplus-windows-x86_64-1.2.1-rc1.tar.bz2
+    version: 1.2.1-rc1
+  openwebrtc-gst-plugins:
+    dependencies:
+      libusrsctp: 1.0.1
+    devel:
+      SHA1: 724f64dca9773bb7a8ec9835e0000e28ae390fe2
+      filename: openwebrtc-gst-plugins-windows-x86_64-0.3.0-2-devel.tar.bz2
+    runtime:
+      SHA1: 43c8f298250ebac8b91213f96c58451bdb43fe34
+      filename: openwebrtc-gst-plugins-windows-x86_64-0.3.0-2.tar.bz2
+    version: 0.3.0-2
+  openwebrtc-lite:
+    dependencies:
+      libusrsctp: 1.0.1
+      openwebrtc-gst-plugins: 0.3.0-2
+    devel:
+      SHA1: 2e118a777f2480b94534a7e1758254ef7ec0eb28
+      filename: openwebrtc-lite-windows-x86_64-0.4.0-devel.tar.bz2
+    runtime:
+      SHA1: b7363fd46225adecea4e5418335e7ba35ac1e7d1
+      filename: openwebrtc-lite-windows-x86_64-0.4.0.tar.bz2
+    version: 0.4.0
+  theron:
+    dependencies: {}
+    devel:
+      SHA1: 72cb687414027756b1260f87d43c1f7c221d1b54
+      filename: theron-windows-x86_64-6.00.02-devel.tar.bz2
+    runtime:
+      SHA1: 245d9f23fd5f1b103283b29919d940d4ac3e2f42
+      filename: theron-windows-x86_64-6.00.02.tar.bz2
+    version: 6.00.02
+origin:
+  SDK:
+    ribbon:
+      package:
+      - communicator
+      - openwebrtc
+      version: 0.4.0
+platform: windows
