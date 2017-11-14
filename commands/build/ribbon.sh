@@ -1,43 +1,80 @@
-
-
-
 __dir__=$(cd $(dirname ${BASH_SOURCE[0]}); pwd )
 __rootdir__=$(cd ${__dir__}/../.. ; pwd)
 __libdir__=$(cd $__rootdir__/commands/lib; pwd )
 __config__=$__rootdir__/config.ini
 
+function check(){
+    
+    if [ $? -ne 0 ]; then
+	   echo "[Fail] $1"
+	   exit 1	
+	else
+	   echo "[OK] $1"
+	   return 0
+	fi
+}
 
 
+inifile=$($__libdir__/inifile)
+config=$($inifile.open $__config__)
 
+cbc=
+home=
+if [ "x$(uname)" == "xLinux" ]; then
+   cbc=lin64
+   home=$($config.get cerbero home.linux)
+else
+   cbc=win64
+   home=$($config.get cerbero home.windows)
+fi
 
-libcerbero=$( $__libdir__/cerbero )
+[ "x$1" == "x--debug" ] && cbc=${cbc}d
+cbc=config/${cbc}.cbc
 
-cbc=config/win64.cbc
-cerbero=$($libcerbero.open $__config__ $cbc)
+#
+#
+#
+#echo -e "
+#HOME : $home
+#config : $__config__
+#cerbero config : $cbc
+#"
+#
+cerbero=$( $__libdir__/cerbero -c $cbc -i $__config__)
+#
+# clear previous build
+#
+
+prefix=$($cerbero.get_config prefix)
+[ -d $prefix ] && rm -rf $prefix
+
+build_tools_prefix=$($cerbero.get_config build_tools_prefix)
+[ -d $build_tools_prefix ] && rm -rf $build_tools_prefix
 
 pkgname=$($cerbero.build_tools_pkg_name)
 repo=$($cerbero.release_repo build_tools)
+
 $cerbero.run cpm-install  $pkgname --repo $repo --build-tools
+check "install $pkgname at $repo"
 
 for name in  base gstreamer
 do
-   echo "start install $name"
    repo=$($cerbero.release_repo $name)
-   echo "repo: $repo"
-   $cerbero.run cpm-install  --repo $repo --type build  
-   
-   if [ $? -ne 0 ]; then
-       echo install $name failed !
-	   exit 1
-   fi
-   echo $name install done!
+   $cerbero.run cpm-install  --repo $repo --type build
+   check "install $name SDK at $repo"   
 done
+echo "SDK install completed!"
 
-$cerbero.run package ribbon --tarball
+rdir=$($cerbero.release_dir )/$($cerbero.release_tag ribbon)
+[ -d $rdir ] && rm -rf $rdir
+mkdir -p $rdir/tarball
 
-rdir=$($cerbero.release_dir )
-rtag=$($cerbero.release_tag ribbon)
-[ -d $rdir/$rtag ] && rm -rf $rdir/$rtag
-mkdir -p $rdir/$rtag &&
-$cerbero.run cpm-pack ribbon --type sdk --output-dir $rdir/$rtag
+cache=$($cerbero.get_config home_dir)/$($cerbero.get_config cache_file )
+[ -f $cache ] && rm -rf $cache
+
+$cerbero.run package ribbon --tarball -o $rdir/tarball
+check "Build ribbon"
+$cerbero.run cpm-pack ribbon --type sdk --output-dir $rdir
+check "Pack ribbon"
+
 

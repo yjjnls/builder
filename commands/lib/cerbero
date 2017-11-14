@@ -7,32 +7,72 @@ __file__=$(echo ${BASH_SOURCE[0]} )
 __dir__=$(cd $(dirname ${BASH_SOURCE[0]}); pwd )
 __builder__=$(cd $__dir__/../..; pwd)
 
+function trace(){
+   if [ ! -z $BUILDER_COMMANDS_DEBUG  ]; then
+      if [ -f $BUILDER_COMMANDS_DEBUG ]; then
+	     echo $@>>$BUILDER_COMMANDS_DEBUG
+	  fi 
+   fi
+}
      #============================================#
      #       module command implement             #
      #============================================#
 
 __config__=
 __custom__=	 
-__cbc__=
-__arch__=x86_64
-__platform__=windows
+
+__arch__=
+__platform__=
 __debug__=
 __home__=
 
-__option_cbc__=
+
 
 [ "x$(uname)" == "xLinux" ] && __platform__==linux
 
-function _cbc(){
-    if [ -z $__cbc__ ];then
-	   __cbc__=$__option_cbc__
-		if [ ! -z $__custom__ ]; then
-			__cbc__=$(__builder__)/custom/$__custom__/$__cbc__
-		fi
-	fi
+__cerbero_vars_file__=${__dir__}/cerbero_variants@cerbero
+#import from $__cerbero_vars_file__
+
+[ -f $__cerbero_vars_file__ ] && source $__cerbero_vars_file__
+
+
+function package_version(){
+
+   name=$1
+   if [[ ($name == "build-tools") || ($name == "build_tools") ]]; then
+      name="gstreamer-1.0"
+   fi
+   n=${#__CERBERO_PACKAGE[@]}
+   for(( i=0 ; i < $n ; i++ ));
+   do
+       key=${__CERBERO_PACKAGE[$i]}
+	   let i++
+       if [ $key == $name ]; then
+		   echo ${__CERBERO_PACKAGE[$i]}
+		   return 0
+	   fi
+   done;
+   return 1
+}
+
+function get_config(){
+   name=$1
+   n=${#__CERBERO_CONFIG[@]}
+   for(( i=0 ; i < $n ; i++ ));
+   do
+       key=${__CERBERO_CONFIG[$i]}
+	   let i++
+       if [ "x$key" == "x$name" ]; then
+		   echo ${__CERBERO_CONFIG[$i]}
+		   return 0
+	   fi
+   done;
+   trace "Not found cerbero.get_config $name"
+   return 1
 }
 
 function _home(){
+    
     local inifile=$($__dir__/inifile)
 	local config=$($inifile.open $__config__)
 
@@ -56,19 +96,6 @@ function _home(){
 
 }
 
-function _init_(){
-   __home__=$(_home)
-   _cbc
-   __debug__=$(config build_type)
-   [ "x$__debug__" != "xdebug" ] && __debug__=   
-}
-
-
-function config(){
-   local name=$1
-   cd $__home__ &&
-   ./cerbero-uninstalled -c $__cbc__ cpm-query --configvar $name 2>&1 | awk -v var="config.${name}" -F ['='] '{  if( $1==var) print $2}'
-}
 
 
 
@@ -96,11 +123,6 @@ function load(){
 	return 0
 }
 
-function pkg_version(){
-	name=$1
-	cd ${__home__}&&
-	./cerbero-uninstalled packageinfo $name 2>&1 | awk '{if( $1== "Version:") print $2; }'
-}
 
 function load_cerbero_pkg_src(){
     local inifile=$($__dir__/inifile)
@@ -152,28 +174,26 @@ function release_tag(){
 	local platform=
 	if [[ ($name == "build_tools") || ($name == "build-tools")  ]] ; then
 	    tagname="gstreamer-build_tools"
-		version=$(pkg_version 'gstreamer-1.0')
+		version=$(package_version 'gstreamer-1.0')
 	elif [[ $name == 'base' ]] ; then
 	    tagname="base"
-		version=$(pkg_version 'gstreamer-1.0')
+		version=$(package_version 'gstreamer-1.0')
 	elif [[ ($name == 'gstreamer') || ($name == 'gstreamer-1.0') ]] ; then
 	    tagname="gstreamer"
-		version=$(pkg_version 'gstreamer-1.0')
+		version=$(package_version 'gstreamer-1.0')
 
 	else
-	    version=$(pkg_version $name )	
+	    version=$(package_version $name )	
+		[ ! -z $__debug__ ] && tagname="${tagname}_d"
 	fi
 	
-	if [ ! -z $__debug__ ]; then
-	   tagname="${tagname}_d"
-	fi
 	
 	rtag=${tagname}-${__platform__}-${__arch__}-${version}
 	echo $rtag
 }
 
 function build_tools_pkg_name(){
-    local version=$(pkg_version 'gstreamer-1.0')
+    local version=$(package_version 'gstreamer-1.0')
     echo build_tools-${__platform__}-${__arch__}-${version}.tar.bz2
 }
 
@@ -193,7 +213,7 @@ function release_repo(){
 	   echo $($inifile.get $__config__  release repo )/$rtag
 	   return 0
 	fi
-	
+	trace "release_repo: $name $option =>rtag $rtag "
 	local rdir=$(release_dir)/$rtag
 	if [ $name == build_tools ]; then
 	   if [ -f $rdir/$(build_tools_pkg_name) ]; then
@@ -208,93 +228,80 @@ function release_repo(){
 	echo $( $inifile.get $__config__  release repo )/$rtag	
 }
 
-function dump(){
-   echo "=========cerbero=============="
-   echo "__config__:$__config__"
-   echo "__custom__:$__custom__"
-   echo $@
-   echo "=============================="
-}
 
-EXPORTS=(
+
+
+
+__exports__=(
    load
-   pkg_version
    load_cerbero_pkg_src
    run
-   config
+   get_config
+   package_version
    release_tag
    build_tools_pkg_name
    release_dir
    release_repo
    
-   
-   dump
-   
 )
+         #---------------------------
+         #   Main
+         #----------------------------
 
-     #============================================#
-     #       export                               #
-     #============================================#
-
-opt=$1;shift
-if [ -z $opt ]; then
-   echo "${__file__}  "
-   exit 0
-fi
-
-
-if [ "$opt" == ".open" ];then
-   _config=
-   _custom=
-   _debug=
-   _config=$1
-   if [ ! -f ${_config} ]; then
-      echo "$_config not exist "
-	  exit 1
-   fi
-   _config="@$1"
+while [ ! -z $1 ] ; do
+ opt=$1
+ case $opt in
+   -c|--config)
+	  __cbc__=$2; shift 2
+	  trace config $@
+   ;;
    
-   if [ ! -z $2 ]; then
-       _custom="@$2"
-   fi
-
-   if [ ! -z $3 ]; then
-       _debug="@$3"
-   fi
+   -i|--init-file)
+	  __config__=$2;shift 2
+	  trace ini $@
+   ;;
    
-   echo "${__file__}  ${_config} ${_custom} "
-   exit 0
-fi
-if [ "${opt:0:1}" == "@" ]; then
+   -u|--custom)
+	  __custom__=$2;shift 2
+   ;;
+   *) 
 
-    __config__=${opt:1}
-
-	cbc=$1
-	if [ "${cbc:0:1}" == "@" ]; then
-	    __option_cbc__=${cbc:1}
-		shift
-	fi
-	
-	custom=$1
-	if [ "${custom:0:1}" == "@" ]; then
-	    __custom__=${custom:1}
-		shift
-	fi
-fi
-
-opt=$1;shift
-for fn in ${EXPORTS[@]}
-do
-   if [[ "$opt" == "${fn}" || "$opt" == ".${fn}"  ]];then
-       _init_
-       ${fn} $@
-	   exit $?
-   fi
+   break
+   ;;
+  esac
 done
-exit 128
+__home__=$(_home)
+__platform__=$(get_config platform)
+__arch__=$(get_config arch)
+__debug__=$(get_config build_type | tr  'A-Z' 'a-z')
+[ "x$__debug__" != "xdebug" ] && __debug__=
 
+trace "home:$__home__ platform:$__platform__ arch:$__arch__ debug:$__debug__"
 
+if [ -z $1 ]; then	
+	#intialization
+	[ -f $__cerbero_vars_file__ ] && rm -f $__cerbero_vars_file__
+	run cpm-vars --filename $__cerbero_vars_file__ 1>&2
+	
+	if [ -z $__custom__ ]; then
+		echo "${__file__}  -c ${__cbc__} -i ${__config__} "
+	else
+		echo "${__file__}  -c ${__cbc__} -i ${__config__} -u ${__custom__} "
+	fi
+	exit 0
+else
 
+#call function
+    shift
+	for fn in ${__exports__[@]}
+	do
+	   if [[ "$opt" == ".${fn}"  ]];then
+		  __home__=$(_home)
+		  ${fn} $@
+		  exit $?
+	   fi
+	done
+fi
 
 
 

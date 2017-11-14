@@ -8,8 +8,10 @@ __dir__=$(cd $(dirname ${BASH_SOURCE[0]}); pwd )
      #============================================#
      #       module command implement             #
      #============================================#
-	 
+
+
 function info(){
+   
    echo $@
 }
 
