@@ -160,7 +160,7 @@ function load_cerbero_pkg_src(){
 }
 
 function run(){
-	cd $__home__ &&
+	cd /cerbero &&
 	./cerbero-uninstalled -c "$__cbc__" $@
 }
 
