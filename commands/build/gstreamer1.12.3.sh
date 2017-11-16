@@ -79,10 +79,6 @@ rdir=$($cerbero.release_dir )/$($cerbero.release_tag base)
 [ -d $rdir ] && rm -rf $rdir
 mkdir -p $rdir/tarball
 
-rdir=$($cerbero.release_dir )/$($cerbero.release_tag gstreamer)
-[ -d $rdir ] && rm -rf $rdir
-mkdir -p $rdir/tarball
-
 cache=$($cerbero.get_config home_dir)/$($cerbero.get_config cache_file )
 [ -f $cache ] && rm -rf $cache
 
@@ -91,9 +87,13 @@ check "Build base"
 $cerbero.run cpm-pack base --type sdk --output-dir $rdir
 check "Pack base"
 
-$cerbero.run package base --tarball -o $rdir/tarball
+rdir=$($cerbero.release_dir )/$($cerbero.release_tag gstreamer)
+[ -d $rdir ] && rm -rf $rdir
+mkdir -p $rdir/tarball
+
+$cerbero.run package gstreamer --tarball -o $rdir/tarball
 check "Build gstreamer"
-$cerbero.run cpm-pack base --type sdk --output-dir $rdir
+$cerbero.run cpm-pack gstreamer --type sdk --output-dir $rdir
 check "Pack gstreamer"
 
 
