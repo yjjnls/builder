@@ -88,6 +88,9 @@ function load_cerbero_pkg_src(){
 		
 		echo "extracting ${tarball}"
 		tar vxf ~tmp/${tarball} -C ~tmp/
+		if [ ! -d ~tmp/cerbero-${version}/sources ] ; then
+			mkdir ~tmp/cerbero-${version}/sources
+		fi
 		mv  -f ~tmp/cerbero-${version}/sources ${__cerbero_home__}/sources
 	fi
 
