@@ -80,6 +80,8 @@ function _load(){
 }
 
 function _bootstrap(){
+	_load
+
 	cerbero_sh ${_CONFIG} bootstrap
 	exitif $? "bootstrap failed!"
 
@@ -91,7 +93,7 @@ function _bootstrap(){
 	[ -d $rdir ] && rm -rf $rdir
 	mkdir -p $rdir &&
 	cerbero_sh ${_CONFIG} cpm-pack --type package --build-tools  --output-dir $rdir 
-	#    cerbero ${_CONFIG} cpm-pack pkg-config     --build-tools --output-dir $rdir
+	cerbero_sh ${_CONFIG} cpm-pack pkg-config     --build-tools --output-dir $rdir
 	exitif $? "Pack for build-tools failed"
 	mv ${build_tools_dir} ${bkdir}   
 	echo "        ======== build tools compiled ! ========"
@@ -151,19 +153,24 @@ function _install_base(){
 }
 
 function _build_gstreamer(){
+	echo '---1------'
 	_load
+	echo '----2-----'
 
 	_install_base
    
 	#[ -d $_PREFIX ] && mv $_PREFIX ${_PREFIX}@$(date +%Y%m%d%H%M%S)
+	echo '---------'
+	cerbero_sh ${_CONFIG} package gstreamer-1.0 --tarball &&
 	rdir=${_RELEASE_DIR}/${_GSTREAMER_RELEASE_NAME}
+	echo '---------------'
 	[ ! -d $rdir ] && rm -rf $rdir
 	mkdir $rdir
 
 	#cerbero ${_CONFIG} bootstrap --build-tools-disable &&
 	#_install_build_tools &&
 	#_install_base &&   
-	#cerbero ${_CONFIG} package gstreamer-1.0 --tarball &&
+	# cerbero_sh ${_CONFIG} package gstreamer-1.0 --tarball &&
 	cerbero_sh ${_CONFIG} cpm-pack gstreamer-1.0 --type sdk --output-dir $rdir
 
 	exitif $? "build gstreamer base sdk failed."
@@ -189,11 +196,11 @@ function _build_gstreamer(){
 # _load
 
 _bootstrap
-
+# # exit 0
 _build_base
 
 _build_gstreamer
-
+# _install_build_tools
 echo "        ======== DONE ! ========"
 # "
 # echo $repo
