@@ -133,7 +133,7 @@ function load_cerbero_pkg_src(){
 	ext=$2
 	cd $homed
 	
-	# [ -z $version ] && version=$( gstreamer_version )
+	[ -z $version ] && version=$(package_version 'gstreamer-1.0')
 	[ -z $ext ] && ext=tar.gz
 
 	[ ! -d ~tmp ] && mkdir ~tmp 
@@ -143,7 +143,7 @@ function load_cerbero_pkg_src(){
 
 	if [ ! -d sources ]; then
 		if [ ! -f ~tmp/${tarball} ] ; then
-		    repo=$($config.get cerbero gstreamer-bundle-source-repo)
+		    repo=$($inifile.get cerbero gstreamer-bundle-source-repo)
 			[ -z $repo ] && repo=https://gstreamer.freedesktop.org/data/pkg/src
 			url=${repo}/${version}/${tarball}
 			wget --no-check-certificate $url -O ~tmp/${tarball} 

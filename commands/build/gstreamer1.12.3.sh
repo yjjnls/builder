@@ -139,9 +139,9 @@ function build_gstreamer(){
 	check "Pack gstreamer-1.0"
 }
 # -------------------------------------------------------------
-# load
+load
 
-build_gstreamer
+# build_base
 
 echo "        ======== DONE ! ========"
 # 	cerbero_sh ${_CONFIG} bootstrap
