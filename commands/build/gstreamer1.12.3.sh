@@ -53,7 +53,7 @@ function load(){
 }
 
 function bootstrap(){
-	$cerbero.run bootstrap
+	$cerbero.run bootstrap --build-tools-disable
 	check "Cerbero bootstrap"
 }
 
@@ -68,6 +68,10 @@ function bootstrap(){
 
 	# $cerbero.run cpm-install  $pkgname --repo $repo --build-tools
 	# check "install $pkgname at $repo"
+function clean(){
+	prefix=$($cerbero.get_config prefix)
+	[ -d $prefix ] && rm -rf $prefix
+}
 
 function install(){
 	for i in $@; 
@@ -84,22 +88,21 @@ function install(){
 }
 
 function build_tools(){
-	bootstrap
+	# bootstrap
 
-	rdir=$($cerbero.release_dir )/$($cerbero.release_tag base)
+	rdir=$($cerbero.release_dir )/$($cerbero.release_tag build_tools)
 	[ -d $rdir ] && rm -rf $rdir
-	mkdir -p $rdir/tarball
+	# mkdir -p $rdir/tarball
 
-	prefix=$($cerbero.get_config prefix)
-	[ -d $prefix ] && rm -rf $prefix
+
 
 	build_tools_prefix=$($cerbero.get_config build_tools_prefix)
 	[ -d $build_tools_prefix ] && rm -rf $build_tools_prefix
 
-	$cerbero.run package base --tarball -o $rdir/tarball
-	check "Build base"
-	cerbero_sh ${_CONFIG} cpm-pack --type package --build-tools  --output-dir $rdir 
-	cerbero_sh ${_CONFIG} cpm-pack pkg-config     --build-tools --output-dir $rdir
+	# $cerbero.run package base --tarball -o $rdir/tarball
+	# check "Build base"
+	$cerbero.run cpm-pack --type package --build-tools  --output-dir $rdir 
+	$cerbero.run cpm-pack pkg-config     --build-tools --output-dir $rdir
 
 }
 
@@ -136,9 +139,9 @@ function build_gstreamer(){
 	check "Pack gstreamer-1.0"
 }
 # -------------------------------------------------------------
-load
+# load
 
-build_tools
+build_gstreamer
 
 echo "        ======== DONE ! ========"
 # 	cerbero_sh ${_CONFIG} bootstrap

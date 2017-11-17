@@ -127,13 +127,13 @@ function load(){
 function load_cerbero_pkg_src(){
     local inifile=$($__dir__/inifile)
 	local config=$($inifile $__config__)
-	local homed=$(home)
+	local homed=$__home__
 	
     version=$1
 	ext=$2
 	cd $homed
 	
-	[ -z $version ] && version=$( gstreamer_version )
+	# [ -z $version ] && version=$( gstreamer_version )
 	[ -z $ext ] && ext=tar.gz
 
 	[ ! -d ~tmp ] && mkdir ~tmp 
