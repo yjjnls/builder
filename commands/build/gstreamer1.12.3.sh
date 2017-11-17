@@ -53,7 +53,7 @@ function load(){
 }
 
 function bootstrap(){
-	$cerbero.run bootstrap --build-tools-disable
+	$cerbero.run bootstrap $@
 	check "Cerbero bootstrap"
 }
 
@@ -88,16 +88,17 @@ function install(){
 }
 
 function build_tools(){
-	# bootstrap
+	bootstrap 
+	# bootstrap --build-tools-disable
 
 	rdir=$($cerbero.release_dir )/$($cerbero.release_tag build_tools)
 	[ -d $rdir ] && rm -rf $rdir
-	# mkdir -p $rdir/tarball
+	mkdir -p $rdir/tarball
 
 
 
-	build_tools_prefix=$($cerbero.get_config build_tools_prefix)
-	[ -d $build_tools_prefix ] && rm -rf $build_tools_prefix
+	# build_tools_prefix=$($cerbero.get_config build_tools_prefix)
+	# [ -d $build_tools_prefix ] && rm -rf $build_tools_prefix
 
 	# $cerbero.run package base --tarball -o $rdir/tarball
 	# check "Build base"
@@ -139,9 +140,9 @@ function build_gstreamer(){
 	check "Pack gstreamer-1.0"
 }
 # -------------------------------------------------------------
-load
+# load
 
-# build_base
+build_tools
 
 echo "        ======== DONE ! ========"
 # 	cerbero_sh ${_CONFIG} bootstrap
