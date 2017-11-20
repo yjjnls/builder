@@ -1,3 +1,4 @@
+#!/bin/bash
 __dir__=$(cd $(dirname ${BASH_SOURCE[0]}); pwd )
 __root__=$(cd ${__dir__}/../.. ; pwd)
 
@@ -8,10 +9,10 @@ _VERSION=
 _TAG=
 _BRANCH=
 _RELEASE_DIR=${__root__}/releases
-_LOAD=Yes
+_LOAD=No
 _BOOTSTRAP=Yes
-_BASE=Yes
-_GSTREAMER=Yes
+_BASE=No
+_GSTREAMER=No
 
 _ARCH=x86_64
 _PLATFORM=windows
@@ -156,8 +157,8 @@ function _load(){
 }
 
 function _bootstrap(){
-   cerbero ${_CONFIG} bootstrap
-   exitif $? "bootstrap failed!"
+#    cerbero ${_CONFIG} bootstrap
+#    exitif $? "bootstrap failed!"
    build_tools_dir=$(cerberovar config build_tools_prefix)
 
    bkdir=${build_tools_dir}.${_PLATFORM}-${_ARCH}-${_VERSION}@$(date +%Y%m%d%H%M%S)
@@ -171,6 +172,8 @@ function _bootstrap(){
    
    [ -d $rdir ] && rm -rf $rdir
    mkdir -p $rdir &&
+   echo '------------------'
+   echo $rdir
    cerbero ${_CONFIG} cpm-pack --type package --build-tools  --output-dir $rdir &&
    cerbero ${_CONFIG} cpm-pack pkg-config     --build-tools --output-dir $rdir
    exitif $? "Pack for build-tools failed"
